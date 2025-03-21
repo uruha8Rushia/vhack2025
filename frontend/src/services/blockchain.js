@@ -62,3 +62,16 @@ export const getContract = async () => {
     throw new Error(`Failed to connect to contract: ${error.message}`);
   }
 };
+
+export const createCharity = async (name, goalEth) => {
+  try {
+    const contract = await getContract();
+    const goalWei = ethers.utils.parseEther(goalEth.toString());
+    const tx = await contract.createCharity(name, goalWei);
+    await tx.wait();
+    return tx;
+  } catch (error) {
+    console.error('Create charity failed:', error);
+    throw new Error(`Failed to create charity: ${error.message}`);
+  }
+};

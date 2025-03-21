@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 
 const DonateForm = ({ charityId, onDonate, onClose }) => {
   const [amount, setAmount] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Prevent page reload
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
       alert("Please enter a valid donation amount.");
       return;
@@ -15,27 +15,28 @@ const DonateForm = ({ charityId, onDonate, onClose }) => {
   };
 
   return (
-    <Dialog open={true} onClose={onClose}>
-      <DialogTitle>Donate to Charity</DialogTitle>
-      <DialogContent>
-        <TextField
-          label="Amount (ETH)"
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          fullWidth
-          sx={{ my: 2 }}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="secondary">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} variant="contained">
-          Donate
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <div className="modal">
+      <div className="modal-content">
+        <h2>Donate to Charity</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="number"
+            placeholder="Enter amount in ETH"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+          />
+          <div className="button-group">
+            <button type="button" className="cancel" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="donate">
+              Donate
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

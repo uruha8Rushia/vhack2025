@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CharityCard from "./components/CharityCard";
 import DonateForm from "./components/DonateForm";
-import { Button, Container, Typography, CircularProgress } from "@mui/material";
+import AdminPanel from "./components/AdminPanel";
 import { ethers } from "ethers";
 import { connectWallet, getContract } from "./services/blockchain";
 
@@ -10,12 +10,19 @@ function App() {
   const [currentAccount, setCurrentAccount] = useState("");
   const [selectedCharityId, setSelectedCharityId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [owner, setOwner] = useState(""); // Used in AdminPanel component
 
-  // Fetch charities from blockchain
-  const fetchCharities = async () => {
+  // Fetch charities and owner from blockchain
+  const fetchBlockchainData = async () => {
     try {
       setLoading(true);
       const contract = await getContract();
+
+      // Get owner address
+      const contractOwner = await contract.owner();
+      setOwner(contractOwner);
+
+      // Get charities
       const count = await contract.charityCount();
       const charityList = [];
 
@@ -24,14 +31,14 @@ function App() {
         charityList.push({
           id: i,
           name: charity.name,
-          goal: ethers.utils.formatEther(charity.goal), 
-          fundsRaised: ethers.utils.formatEther(charity.fundsRaised), 
+          goal: ethers.utils.formatEther(charity.goal),
+          fundsRaised: ethers.utils.formatEther(charity.fundsRaised),
         });
       }
 
       setCharities(charityList);
     } catch (error) {
-      console.error("Error fetching charities:", error);
+      console.error("Error fetching blockchain data:", error);
     } finally {
       setLoading(false);
     }
@@ -42,10 +49,10 @@ function App() {
     try {
       const contract = await getContract();
       const tx = await contract.donate(charityId, {
-        value: ethers.utils.parseEther(amount), // ✅ Updated for Ethers v5
+        value: ethers.utils.parseEther(amount),
       });
       await tx.wait();
-      fetchCharities(); // Refresh data after donation
+      fetchBlockchainData(); // Refresh data after donation
     } catch (error) {
       console.error("Donation failed:", error);
     }
@@ -62,33 +69,38 @@ function App() {
       }
     };
     checkWallet();
-    fetchCharities();
+    fetchBlockchainData();
   }, []);
 
   return (
-    <Container>
-      <Typography variant="h4" sx={{ my: 3 }}>
-        Charity Platform
-      </Typography>
+    <div className="container">
+      <h1>Charity Platform</h1>
 
       {!currentAccount ? (
-        <Button variant="contained" onClick={connectWallet}>
+        <button className="connect-wallet" onClick={connectWallet}>
           Connect Wallet
-        </Button>
+        </button>
       ) : (
-        <Typography>Connected: {currentAccount.slice(0, 6)}...</Typography>
+        <p>Connected: {currentAccount.slice(0, 6)}...{currentAccount.slice(-4)}</p>
       )}
 
       {loading ? (
-        <CircularProgress sx={{ display: "block", mx: "auto", my: 4 }} />
+        <p>Loading data...</p>
       ) : (
-        charities.map((charity) => (
-          <CharityCard
-            key={charity.id}
-            charity={charity}
-            onDonate={(id) => setSelectedCharityId(id)}
-          />
-        ))
+        <>
+          {currentAccount.toLowerCase() === owner.toLowerCase() && (
+            <AdminPanel ownerAddress={owner} currentAccount={currentAccount} />
+          )}
+          <div className="charity-list">
+            {charities.map((charity) => (
+              <CharityCard
+                key={charity.id}
+                charity={charity}
+                onDonate={(id) => setSelectedCharityId(id)}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {selectedCharityId !== null && (
@@ -98,7 +110,7 @@ function App() {
           onClose={() => setSelectedCharityId(null)}
         />
       )}
-    </Container>
+    </div>
   );
 }
 
