@@ -4,6 +4,7 @@ import { createCharity } from '../services/blockchain';
 export default function AdminPanel({ ownerAddress, currentAccount }) {
   const [name, setName] = useState('');
   const [goal, setGoal] = useState('');
+  const [durationDays, setDurationDays] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -11,7 +12,7 @@ export default function AdminPanel({ ownerAddress, currentAccount }) {
       alert('Only contract owner can create charities');
       return;
     }
-    await createCharity(name, goal);
+    await createCharity(name, goal, durationDays);
     setName('');
     setGoal('');
   };
@@ -36,6 +37,15 @@ export default function AdminPanel({ ownerAddress, currentAccount }) {
             step="0.01"
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Duration (Days):</label>
+          <input
+            type="number"
+            value={durationDays}
+            onChange={(e) => setDurationDays(e.target.value)}
             required
           />
         </div>

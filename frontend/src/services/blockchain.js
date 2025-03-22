@@ -63,15 +63,30 @@ export const getContract = async () => {
   }
 };
 
-export const createCharity = async (name, goalEth) => {
+export const createCharity = async (name, goalEth, durationDays) => {
   try {
     const contract = await getContract();
     const goalWei = ethers.utils.parseEther(goalEth.toString());
-    const tx = await contract.createCharity(name, goalWei);
+    const tx = await contract.createCharity(name, goalWei, durationDays);
     await tx.wait();
     return tx;
   } catch (error) {
     console.error('Create charity failed:', error);
     throw new Error(`Failed to create charity: ${error.message}`);
+  }
+};
+
+export const getDonations = async (charityId) => {
+  try {
+    const contract = await getContract();
+    const donations = await contract.getDonations(charityId);
+    return donations.map(d => ({
+      donor: d.donor,
+      amount: ethers.utils.formatEther(d.amount),
+      timestamp: new Date(d.timestamp * 1000)
+    }));
+  } catch (error) {
+    console.error('Get donations failed:', error);
+    throw new Error(`Failed to get donations: ${error.message}`);
   }
 };
